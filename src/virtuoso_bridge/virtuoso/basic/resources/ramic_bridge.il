@@ -209,8 +209,10 @@ procedure(RBStart()
             ; Start the Python daemon process with IPC handlers.
             ; Use "env -u" to strip Virtuoso's LD_LIBRARY_PATH / LD_PRELOAD
             ; so the system Python links against its own libs, not Virtuoso's
-            ; bundled (and often incompatible) copies.
-            RBIpc = ipcBeginProcess(sprintf(nil "/usr/bin/env -u LD_LIBRARY_PATH -u LD_PRELOAD stdbuf -oL %s -u %L %L %L" RBPython RBDPath host RBPort) "" 'RBIpcDataHandler 'RBIpcErrHandler 'RBIpcFinishHandler logpath)
+            ; bundled (and often incompatible) copies.  Also strip PYTHONHOME /
+            ; PYTHONPATH, which other EDA tools (e.g. Keysight ADS) leak into the
+            ; environment and which break the system Python ("No module named site").
+            RBIpc = ipcBeginProcess(sprintf(nil "/usr/bin/env -u LD_LIBRARY_PATH -u LD_PRELOAD -u PYTHONHOME -u PYTHONPATH stdbuf -oL %s -u %L %L %L" RBPython RBDPath host RBPort) "" 'RBIpcDataHandler 'RBIpcErrHandler 'RBIpcFinishHandler logpath)
         )
         printf("[RAMIC Bridge ipc=%L] launching daemon (bind=%s:%d) at (%s)\n"
             RBIpc

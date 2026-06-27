@@ -598,7 +598,16 @@ def _print_spectre_status(profile: str | None, suffix: str) -> None:
                 'which spectre; '
                 'spectre -V'
             )
-            slow = f"csh -f -c {shlex.quote(csh_script)} 2>&1 | head -5"
+            # Filter to just the spectre binary path (from `which spectre`,
+            # ends in ``/spectre``) and the ``@(#)$CDS:`` version banner.  A
+            # blind ``head -N`` truncates the wrong lines: a verbose site cshrc
+            # can print 20+ "Using ... Path" / license lines *before*
+            # `which spectre` runs, pushing the real output past the cutoff and
+            # making status report a spurious NOT FOUND.
+            slow = (
+                f"csh -f -c {shlex.quote(csh_script)} 2>&1 "
+                r"| grep -E '/spectre$|@\(#\)\$CDS:' | head -5"
+            )
             combined = f"{{ {fast}; }} || {{ {slow}; }}"
         else:
             combined = fast
